@@ -28,7 +28,7 @@ from nomad.datamodel.data import (
     EntryData,
 )
 
-from lakeshore-nomad-plugin.hall.schema import (
+from lakeshore_nomad_plugin.hall.schema import (
     ExperimentLakeshoreHall,
     HallMeasurement,
     HallMeasurementReference,

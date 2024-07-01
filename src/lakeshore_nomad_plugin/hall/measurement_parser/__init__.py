@@ -15,19 +15,23 @@
 # limitations under the License.
 #
 
-from nomad.config.models.plugins import SchemaPackageEntryPoint
+from nomad.config.models.plugins import ParserEntryPoint
 from pydantic import Field
 
 
-class HallEntryPoint(SchemaPackageEntryPoint):
-
+class HallMeasurementParserEntryPoint(ParserEntryPoint):
     def load(self):
-        from lakeshore-nomad-plugin.hall.schema import m_package
+        from lakeshore_nomad_plugin.hall.measurement_parser.parser import (
+            HallMeasurementsParser,
+        )
 
-        return m_package
+        return HallMeasurementsParser(**self.dict())
 
 
-hall_schema = HallEntryPoint(
-    name="HallSchema",
-    description="Schema package for Hall measurement definitions.",
+hall_measurement_parser = HallMeasurementParserEntryPoint(
+    name="HallMeasurementsParser",
+    description="Parse Hall measurement file from Lakeshore.",
+    mainfile_name_re=".+\.txt",
+    mainfile_mime_re=r"(?:text/plain|application/x-wine-extension-ini)",
+    mainfile_contents_re=r"(?s)\[Sample parameters\].*?\[Measurements\]",
 )
