@@ -56,7 +56,7 @@ from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
 )
 
-configuration = config.get_plugin_entry_point("lakeshore_plugin.hall:hall_schema")
+configuration = config.get_plugin_entry_point("lakeshore_nomad_plugin.hall:hall_schema")
 
 m_package = SchemaPackage()
 

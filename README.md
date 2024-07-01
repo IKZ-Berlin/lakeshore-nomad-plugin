@@ -13,7 +13,7 @@ See also:
 The directory tree:
 
 ```bash
-Lakeshore_plugin/
+lakeshore_nomad_plugin/
 ├── nomad.yaml
 ├── src
 │   └── hall
