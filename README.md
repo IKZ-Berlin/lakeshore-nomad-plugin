@@ -11,7 +11,7 @@ See also:
 ## Structure
 
 The directory tree:
-  yo
+
 ```bash
 Lakeshore_plugin/
 ├── nomad.yaml
@@ -57,101 +57,8 @@ Lakeshore_plugin/
 
 ## Installation
 
-To use these plugins, you need to:
+to be extended..
 
-* add the `src/` directory to your `PYTHONPATH`. You can do this by running the following command in the terminal where you run NOMAD:
-```sh
-export PYTHONPATH="$PYTHONPATH:/your/path/Lakeshore_plugin/src"
-```
-Export this system variable in the same terminal where you run NOMAD (`nomad admin run appworker`).
-
-To make this path persistent, write into the .pyenv/bin/activate file of your virtual environment. Use the path of your local OS where you cloned this repository.
-
-* include it in your `nomad.yaml` configuration file and specify the Python package for the plugin in the options section.
-```yaml
-plugins:
-  include:
-    - 'parsers/hall_lakeshore_measurement'
-    - 'parsers/hall_lakeshore_instrument'
-```
-The name after the `/` is user defined.
-Then, specify the Python package for the plugin in the options section:
-```yaml
-options:
-    parsers/hall_lakeshore_measurement:
-      python_package: hall.measurement_parser
-    parsers/hall_lakeshore_instrument:
-      python_package: hall.instrument_parser
-```
-
-This plugin does not require other plugins to be loaded. Althought, it is called in other plugins, you can clone them in your local machine:
-
-```sh
-git clone https://github.com/FAIRmat-NFDI/nomad-measurements
-git clone https://github.com/FAIRmat-NFDI/nomad-material-processing
-git clone https://github.com/FAIRmat-NFDI/AreaA-data_modeling_and_schemas
-```
-
-Consequentlty, other paths must be appended to `PYTHONPATH` system variable:
-
-```sh
-export MYPATH=/your/path
-export PYTHONPATH=$PYTHONPATH:$MYPATH/PLUGINS/nomad-measurements/src
-export PYTHONPATH=$PYTHONPATH:$MYPATH/PLUGINS/nomad-measurements/src/nomad_measurements
-export PYTHONPATH=$PYTHONPATH:$MYPATH/AreaA-data_modeling_and_schemas/hall/Lakeshore_plugin
-export PYTHONPATH=$PYTHONPATH:$MYPATH/AreaA-data_modeling_and_schemas/LayTec_EpiTT/laytec_epitt_plugin/src
-export PYTHONPATH=$PYTHONPATH:$MYPATH/AreaA-data_modeling_and_schemas/IKZ_plugin/src
-```
-
-To load the full functionality, use the following `plugins` section:
-
-```yaml
-plugins:
-  include:
-    - 'schemas/nomad_measurements'
-    - 'parsers/xrd'
-    - 'schemas/analysis'
-    - 'schemas/nomad_material_processing'
-    - 'parsers/hall_lakeshore_measurement'
-    - 'parsers/hall_lakeshore_instrument'
-    - 'parsers/laytec_epitt'
-    - 'schemas/basesections'
-    - 'parsers/czochralski'
-    - 'parsers/movpe_2'
-    - 'parsers/movpe_1_deposition_control'
-    - 'parsers/movpe_1'
-    - 'parsers/movpe_substrates'
-    - 'parsers/directional_solidification'
-  options:
-    schemas/nomad_measurements:
-      python_package: nomad_measurements
-    parsers/xrd:
-      python_package: xrd
-    schemas/analysis:
-      python_package: analysis
-    schemas/nomad_material_processing:
-      python_package: nomad_material_processing
-    parsers/hall_lakeshore_measurement:
-      python_package: hall.measurement_parser
-    parsers/hall_lakeshore_instrument:
-      python_package: hall.instrument_parser
-    parsers/laytec_epitt:
-      python_package: laytec_epitt
-    schemas/basesections:
-      python_package: basesections
-    parsers/czochralski:
-      python_package: czochralski
-    parsers/movpe_2:
-      python_package: movpe.movpe2_growth_parser
-    parsers/movpe_1_deposition_control:
-      python_package: movpe.movpe1_growth_parser.deposition_control
-    parsers/movpe_1:
-      python_package: movpe.movpe1_growth_parser.constant_parameters
-    parsers/movpe_substrates:
-     python_package: movpe.substrate_parser
-    parsers/directional_solidification:
-      python_package: directional_solidification
-```
 
 ## Usage
 
