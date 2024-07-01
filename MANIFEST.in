@@ -1,0 +1,1 @@
+recursive-include src/hall nomad_plugin.yaml
