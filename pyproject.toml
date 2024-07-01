@@ -11,8 +11,8 @@ version = "0.0.1"
 description = "A plugin for NOMAD containing Lakeshore hall measurements."
 readme = "README.md"
 authors = [
-    { name = "Hampus Näsström", email = 'hampus.naesstroem@physik.hu-berlin.de' },
     { name = "Andrea Albino", email = 'andrea.albino@physik.hu-berlin.de' },
+    { name = "Hampus Näsström", email = 'hampus.naesstroem@physik.hu-berlin.de' },
     { name = "Sarthak Kapoor", email = 'sarthak.kapoor@ikz-berlin.de' },
     { name = "Sebastian Brückner", email = 'sebastian.brueckner@ikz-berlin.de' },
 ]
@@ -46,7 +46,7 @@ where = [
 
 [project.entry-points.'nomad.plugin']
 
-hall_schema = "lakeshore_plugin.hall:hall_schema"
-hall_instrument_parser = "lakeshore_plugin.hall.instrument_parser:hall_instrument_parser"
-hall_measurement_parser = "lakeshore_plugin.hall.measurement_parser:hall_measurement_parser"
+hall_schema = "lakeshore-nomad-plugin.hall:hall_schema"
+hall_instrument_parser = "lakeshore-nomad-plugin.hall.instrument_parser:hall_instrument_parser"
+hall_measurement_parser = "lakeshore-nomad-plugin.hall.measurement_parser:hall_measurement_parser"
 
