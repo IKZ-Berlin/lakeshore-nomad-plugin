@@ -198,3 +198,30 @@ def parse_json(file_path: str) -> Dict[str, Any]:
     """
     with open(file_path, "r", encoding="utf-8") as file:
         return json.load(file)
+
+
+def is_activity_section(section):
+    return any('Activity' in i.label for i in section.m_def.all_base_sections)
+
+
+def handle_section(section):
+    from nomad.datamodel.metainfo.basesections import ExperimentStep
+
+    if hasattr(section, 'reference') and is_activity_section(section.reference):
+        return [ExperimentStep(activity=section.reference, name=section.reference.name)]
+    if section.m_def.label == 'CharacterizationMovpe':
+        sub_sect_list = []
+        for sub_section in vars(section).values():
+            if isinstance(sub_section, list):
+                for item in sub_section:
+                    if hasattr(item, 'reference') and is_activity_section(
+                        item.reference
+                    ):
+                        sub_sect_list.append(
+                            ExperimentStep(
+                                activity=item.reference, name=item.reference.name
+                            )
+                        )
+        return sub_sect_list
+    if not hasattr(section, 'reference') and is_activity_section(section):
+        return [ExperimentStep(activity=section, name=section.name)]

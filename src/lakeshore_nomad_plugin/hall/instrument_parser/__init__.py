@@ -29,7 +29,8 @@ class HallInstrumentParserEntryPoint(ParserEntryPoint):
 hall_instrument_parser = HallInstrumentParserEntryPoint(
     name="HallInstrumentParser",
     description="Parse Hall instrument file from Lakeshore.",
-    mainfile_name_re=".+\.txt",
+    mainfile_name_re=r".+\.txt",
     mainfile_mime_re="application/x-wine-extension-ini",
     mainfile_contents_re=r"(?s)\[SystemParameters\].*?\[Measurement State Machine\]",
 )
+ 

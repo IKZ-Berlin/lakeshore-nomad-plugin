@@ -31,7 +31,7 @@ class HallMeasurementParserEntryPoint(ParserEntryPoint):
 hall_measurement_parser = HallMeasurementParserEntryPoint(
     name="HallMeasurementsParser",
     description="Parse Hall measurement file from Lakeshore.",
-    mainfile_name_re=".+\.txt",
-    mainfile_mime_re=r"(?:text/plain|application/x-wine-extension-ini)",
+    mainfile_name_re='.+\.txt',
+    mainfile_mime_re="(?:text/plain|application/x-wine-extension-ini)",
     mainfile_contents_re=r"(?s)\[Sample parameters\].*?\[Measurements\]",
 )
