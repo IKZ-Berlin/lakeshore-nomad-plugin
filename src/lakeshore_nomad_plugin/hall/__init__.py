@@ -27,7 +27,7 @@ class HallEntryPoint(SchemaPackageEntryPoint):
         return m_package
 
 
-hall_schema = HallEntryPoint(
+schema = HallEntryPoint(
     name="HallSchema",
     description="Schema package for Hall measurement definitions.",
 )

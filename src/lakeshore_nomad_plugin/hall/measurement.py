@@ -29,6 +29,7 @@ from nomad.datamodel.metainfo.basesections import (
     PureSubstance,
     CompositeSystem,
     Measurement,
+    MeasurementResult,
     Process,
     ProcessStep,
     Collection,
@@ -39,7 +40,7 @@ from nomad.datamodel.metainfo.basesections import (
     Experiment
 )
 
-class IVData(ArchiveSection):
+class IVResults(MeasurementResult):
     '''Container for IV-Curve measurement data'''
     m_def = Section(
         a_eln=dict(lane_width='600px'),
@@ -104,7 +105,7 @@ class IVData(ArchiveSection):
         description='The temperatures values of the experiment.')
 
 
-class VariableFieldData(ArchiveSection):
+class VariableFieldResults(MeasurementResult):
     '''Container for variable magnetic field data'''
     m_def = Section(
         a_eln=dict(lane_width='600px'),
@@ -178,7 +179,7 @@ class VariableFieldData(ArchiveSection):
     )
 
 
-class VariableTemperatureData(ArchiveSection):
+class VariableTemperatureResults(MeasurementResult):
     '''Container for variable hall temperature data'''
     m_def = Section(
         a_eln=dict(lane_width='600px'),
@@ -263,9 +264,6 @@ class GenericMeasurement(Measurement):
         ),
     )
 
-    data: SubSection()
-
-
 
 class IVCurveMeasurement(GenericMeasurement):
     '''Representation of an IV curve measurement'''
@@ -298,7 +296,7 @@ class IVCurveMeasurement(GenericMeasurement):
     time_completed = Quantity(
         type=Datetime,
         description='The end time of the experiment.')
-    contact_sets = SubSection(section_def=IVData, repeats=True)
+    results = SubSection(section_def=IVResults, repeats=True)
 
 
 class VariableFieldMeasurement(GenericMeasurement):
@@ -385,7 +383,7 @@ class VariableFieldMeasurement(GenericMeasurement):
         description='The temperature while measuring zero-field resistivity.'
     )
 
-    data = SubSection(section_def=VariableFieldData, repeats=True)
+    results = SubSection(section_def=VariableFieldResults, repeats=True)
 
 
 class VariableTemperatureMeasurement(GenericMeasurement):
@@ -440,4 +438,4 @@ class VariableTemperatureMeasurement(GenericMeasurement):
         type=Datetime,
         description='The end time of the measurement.')
 
-    data = SubSection(section_def=VariableTemperatureData, repeats=True)
+    results = SubSection(section_def=VariableTemperatureResults, repeats=True)

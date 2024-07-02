@@ -49,7 +49,7 @@ where = [
 
 [project.entry-points.'nomad.plugin']
 
-hall_schema = "lakeshore_nomad_plugin.hall:hall_schema"
-hall_instrument_parser = "lakeshore_nomad_plugin.hall.instrument_parser:hall_instrument_parser"
-hall_measurement_parser = "lakeshore_nomad_plugin.hall.measurement_parser:hall_measurement_parser"
+schema = "lakeshore_nomad_plugin.hall:schema"
+instrument_parser = "lakeshore_nomad_plugin.hall.instrument_parser:instrument_parser"
+measurement_parser = "lakeshore_nomad_plugin.hall.measurement_parser:measurement_parser"
 

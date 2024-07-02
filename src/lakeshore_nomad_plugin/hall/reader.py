@@ -11,8 +11,7 @@ import os
 
 from abc import ABC, abstractmethod
 
-from . import helpers
-from . import utils
+from lakeshore_nomad_plugin.hall import utils
 
 
 class BaseReader(ABC):
@@ -96,9 +95,9 @@ MEASUREMENT_REPLACEMENTS = {
 
 # Dict for converting values for specific keys
 CONVERSION_FUNCTIONS = {
-    "Start Time": helpers.convert_date,
-    "Time Completed": helpers.convert_date,
-    "Skipped at": helpers.convert_date
+    "Start Time": utils.convert_date,
+    "Time Completed": utils.convert_date,
+    "Skipped at": utils.convert_date
 }
 
 # Keys that indicate the start of measurement block
@@ -136,7 +135,7 @@ def split_add_key(fobj: Optional[TextIO], dic: dict, prefix: str, expr: str) -> 
         if (
             sprefix in ENUM_FIELDS
             and key in ENUM_FIELDS[sprefix]
-            and helpers.is_integer(jval)
+            and utils.is_integer(jval)
         ):
             if jval not in ENUM_FIELDS[sprefix][key]:
                 logger.warning("Option `%s` not in `%s, %s`", jval, sprefix, key)
@@ -146,25 +145,25 @@ def split_add_key(fobj: Optional[TextIO], dic: dict, prefix: str, expr: str) -> 
         return False
 
     def parse_field():
-        if helpers.is_value_with_unit(jval):
-            value, unit = helpers.split_value_with_unit(jval)
+        if utils.is_value_with_unit(jval):
+            value, unit = utils.split_value_with_unit(jval)
             dic[f"{prefix}/{key}"] = value
-            dic[f"{prefix}/{key}/@units"] = helpers.clean(unit)
+            dic[f"{prefix}/{key}/@units"] = utils.clean(unit)
             return
 
         if parse_enum():
             return
 
-        if helpers.is_integer(jval):
+        if utils.is_integer(jval):
             dic[f"{prefix}/{key}"] = int(jval)
             return
 
-        if helpers.is_number(jval):
+        if utils.is_number(jval):
             dic[f"{prefix}/{key}"] = float(jval)
             return
 
-        if helpers.is_boolean(jval):
-            dic[f"{prefix}/{key}"] = helpers.to_bool(jval)
+        if utils.is_boolean(jval):
+            dic[f"{prefix}/{key}"] = utils.to_bool(jval)
             return
 
         dic[f"{prefix}/{key}"] = CONVERSION_FUNCTIONS.get(key, lambda v: v)(jval)
@@ -174,7 +173,7 @@ def split_add_key(fobj: Optional[TextIO], dic: dict, prefix: str, expr: str) -> 
         for line in fobj:
             if not line.strip():
                 break
-            if helpers.is_key(line):
+            if utils.is_key(line):
                 split_add_key(
                     None,  # There should be no deeper measurement,
                     # prevent further consumption of lines
@@ -185,7 +184,7 @@ def split_add_key(fobj: Optional[TextIO], dic: dict, prefix: str, expr: str) -> 
                 continue
             data.append(list(map(lambda x: x.strip(), re.split("\t+", line))))
 
-        dkey = helpers.get_unique_dkey(dic, f"{prefix}/{key}/{jval}/data")
+        dkey = utils.get_unique_dkey(dic, f"{prefix}/{key}/{jval}/data")
         dic[dkey] = pd.DataFrame(
             np.array(data[1:]), columns=data[0]
         ).apply(pd.to_numeric, args=('coerce',))
@@ -219,10 +218,10 @@ def parse_txt(fname: str, encoding: str = "utf-8") -> dict:
             data.append(list(map(lambda x: x.strip(), re.split("\t+", mline))))
 
         header = list(map(lambda x: x.strip(), re.split("\t+", line)))
-        dkey = helpers.get_unique_dkey(
+        dkey = utils.get_unique_dkey(
             template, f"{current_section}{current_measurement}/data"
         )
-        template.update(helpers.pandas_df_to_template(
+        template.update(utils.pandas_df_to_template(
             dkey,
             pd.DataFrame(
                 #np.array(data, dtype=np.float64), columns=header # !! type check skipped
@@ -233,28 +232,28 @@ def parse_txt(fname: str, encoding: str = "utf-8") -> dict:
         return current_section, current_measurement, nested_line_number
 
     def parse(line_number: int, line: str, current_section: str, current_measurement: str):
-        if helpers.is_section(line):
+        if utils.has_section_format(line):
             print(f"LINE {line_number}: SECTION. {line}")
             sline = line.strip()[1:-1]
             current_section = f"/{SECTION_REPLACEMENTS.get(sline, sline)}"
             current_measurement = ""
             return current_section, current_measurement, 0
 
-        if helpers.is_measurement(line):
+        if utils.is_measurement(line):
             print(f"LINE {line_number}: MEASUREMENT. {line}")
             step, _, *meas = line.partition(":")
             sline = f"{step[6:]}_" + "".join(meas).strip()[:-1]
             current_measurement = f"/{MEASUREMENT_REPLACEMENTS.get(sline, sline)}"
             return current_section, current_measurement, 0
 
-        if helpers.is_key(line):
+        if utils.is_key(line):
             print(f"LINE {line_number}: KEY. {line}")
             split_add_key(
                 fobj, template, f"{current_section}{current_measurement}", line
             )
             return current_section, current_measurement, 0
 
-        if helpers.is_meas_header(line):
+        if utils.is_meas_header(line):
             print(f"LINE {line_number}: MEAS HEADER. {line}")
             return parse_measurement(line_number, line, current_section, current_measurement)
 

@@ -26,6 +26,8 @@ from nomad.metainfo import (
     Section,
 )
 
+from nomad.datamodel.metainfo.workflow import Task
+
 from nomad.config import config
 from nomad.datamodel.data import EntryData, ArchiveSection, EntryDataCategory
 
@@ -54,20 +56,16 @@ from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
 )
 
-from lakeshore_nomad_plugin.hall import reader as hall_reader
 from lakeshore_nomad_plugin.hall.measurement import (
     GenericMeasurement,
     VariableFieldMeasurement,
 )
-from lakeshore_nomad_plugin.hall.hall_instrument import Instrument
-from lakeshore_nomad_plugin.hall.nexus_to_msection import (
-    get_measurements,
-    get_instrument,
-)
+from lakeshore_nomad_plugin.hall.instrument import Instrument
+
 
 from lakeshore_nomad_plugin.hall.utils import handle_section
 
-configuration = config.get_plugin_entry_point("lakeshore_nomad_plugin.hall:hall_schema")
+configuration = config.get_plugin_entry_point("lakeshore_nomad_plugin.hall:schema")
 
 m_package = SchemaPackage()
 
@@ -137,37 +135,6 @@ class HallMeasurement(Measurement, EntryData):
         repeats=True,
     )
 
-    def normalize(self, archive, logger):
-        super(HallMeasurement, self).normalize(archive, logger)
-
-        if not self.data_file:
-            return
-
-        logger.info("Parsing hall measurement measurement file.")
-        with archive.m_context.raw_file(
-            self.data_file, "r", encoding="unicode_escape"
-        ) as f:
-            data_template = hall_reader.parse_txt(f.name)
-            self.measurements = list(get_measurements(data_template))
-
-        for measurement in self.measurements:
-            if isinstance(measurement, VariableFieldMeasurement):
-                if (
-                    measurement.measurement_type == "Hall and Resistivity Measurement"
-                    and measurement.maximum_field == measurement.minimum_field
-                ):
-                    logger.info(
-                        "This measurement was detected as a single Field Room Temperature one."
-                    )
-                    self.results.append(
-                        HallMeasurementResult(
-                            name="Room Temperature measurement",
-                            resistivity=measurement.data[0].resistivity,
-                            mobility=measurement.data[0].hall_mobility,
-                            carrier_concentration=measurement.data[0].carrier_density,
-                        )
-                    )
-
 
 class HallMeasurementReference(SectionReference):
     """
@@ -199,19 +166,6 @@ class HallInstrument(Instrument, EntryData):
     )
 
     instrument = SubSection(section_def=Instrument)
-
-    def normalize(self, archive, logger):
-        super(HallInstrument, self).normalize(archive, logger)
-
-        if not self.data_file:
-            return
-
-        logger.info("Parsing hall measurement instrument file.")
-        with archive.m_context.raw_file(
-            self.data_file, "r", encoding="unicode_escape"
-        ) as f:
-            data_template = hall_reader.parse_txt(f.name)
-            self.instrument = get_instrument(data_template, logger)
 
 
 class HallInstrumentReference(SectionReference):

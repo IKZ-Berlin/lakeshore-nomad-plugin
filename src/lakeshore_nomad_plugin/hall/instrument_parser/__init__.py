@@ -26,7 +26,7 @@ class HallInstrumentParserEntryPoint(ParserEntryPoint):
         return HallInstrumentParser(**self.dict())
 
 
-hall_instrument_parser = HallInstrumentParserEntryPoint(
+instrument_parser = HallInstrumentParserEntryPoint(
     name="HallInstrumentParser",
     description="Parse Hall instrument file from Lakeshore.",
     mainfile_name_re=r".+\.txt",

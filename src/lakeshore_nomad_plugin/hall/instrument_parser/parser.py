@@ -28,13 +28,17 @@ from nomad.datamodel.data import (
     EntryData,
 )
 
+from nomad.datamodel.datamodel import EntryArchive, EntryMetadata
+
 from lakeshore_nomad_plugin.hall.schema import (
     HallInstrument,
 )
-
-from nomad.datamodel.datamodel import EntryArchive, EntryMetadata
-
-from nomad_material_processing.utils import create_archive
+from lakeshore_nomad_plugin.hall.utils import (
+    get_hash_ref,
+    create_archive,
+    get_instrument,
+)
+from lakeshore_nomad_plugin.hall import reader as hall_reader
 
 
 class RawFileLakeshoreInstrument(EntryData):
@@ -50,11 +54,33 @@ class HallInstrumentParser(MatchingParser):
     def parse(self, mainfile: str, archive: EntryArchive, logger) -> None:
         data_file = mainfile.split("/")[-1]
         data_file_with_path = mainfile.split("raw/")[-1]
-        entry = HallInstrument()
-        entry.data_file = data_file_with_path
-        file_name = f"{data_file[:-5]}.archive.json"
-        # entry.normalize(archive, logger)
+        filetype = "yaml"
+        
+        instrument_data = HallInstrument()
+
+        logger.info("Parsing hall measurement instrument file.")
+        with archive.m_context.raw_file(
+            data_file_with_path, "r", encoding="unicode_escape"
+        ) as f:
+            data_template = hall_reader.parse_txt(f.name)
+            self.instrument = get_instrument(data_template, logger)
+
+        instrument_filename = f"{data_file[:-5]}_instrument.archive.{filetype}"
+        instrument_archive = EntryArchive(
+            data=instrument_data,
+            m_context=archive.m_context,
+            metadata=EntryMetadata(upload_id=archive.m_context.upload_id),
+        )
+
+        create_archive(
+            instrument_archive.m_to_dict(),
+            archive.m_context,
+            instrument_filename,
+            filetype,
+            logger,
+        )
+
         archive.data = RawFileLakeshoreInstrument(
-            instrument=create_archive(entry, archive, file_name)
+            instrument=get_hash_ref(archive.m_context.upload_id, instrument_filename)
         )
         archive.metadata.entry_name = data_file + " instrument file"

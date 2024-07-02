@@ -19,11 +19,9 @@ lakeshore_nomad_plugin/
 │   └── hall
 │       ├── nomad_plugin.yaml
 │       ├── schema.py
-│       ├── hall_instrument.py
+│       ├── instrument.py
 │       ├── measurement.py
 │       ├── reader.py
-│       ├── nexus_to_msection.py
-│       ├── helpers.py
 │       ├── utils.py
 │       ├── enum_map.json
 │       ├── instrument_parser
@@ -50,9 +48,9 @@ lakeshore_nomad_plugin/
 - `src/`: contains the source code for the plugins.
 - `tests/`: contains tests for the plugins.
 - `hall/`: contains the source code for the hall measurement.
-- `schema.py`, `hall_instrument.py`, `mesurement.py`: define the structure of the data after it has been parsed. It specifies the fields that the structured data will contain and the types of those fields.
+- `schema.py`, `instrument.py`, `mesurement.py`: define the structure of the data after it has been parsed. It specifies the fields that the structured data will contain and the types of those fields.
 - `parser.py` contains the logic for parsing the raw data from the MOVPE growth process. This includes reading the data from its original format, extracting the relevant information, and transforming it into a structured format.
-- `reader.py`, `nexus_to_msection.py`, `helpers.py`, `utils.py`, `enum_map.json`: contain as well the logic for parsing the raw data from the MOVPE growth process. This includes reading the data from its original format, extracting the relevant information, and transforming it into a structured format.
+- `reader.py`, `utils.py`, `enum_map.json`: contain as well the logic for parsing the raw data from the MOVPE growth process. This includes reading the data from its original format, extracting the relevant information, and transforming it into a structured format.
 - `nomad_plugin.yaml` defines the raw file matching rules of the parser. Check [NOMAD plugin official docs](https://nomad-lab.eu/prod/v1/staging/docs/howto/customization/plugins_dev.html#parser-plugin-metadata) for more info.
 
 ## Installation

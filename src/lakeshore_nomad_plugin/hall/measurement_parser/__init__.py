@@ -28,7 +28,7 @@ class HallMeasurementParserEntryPoint(ParserEntryPoint):
         return HallMeasurementsParser(**self.dict())
 
 
-hall_measurement_parser = HallMeasurementParserEntryPoint(
+measurement_parser = HallMeasurementParserEntryPoint(
     name="HallMeasurementsParser",
     description="Parse Hall measurement file from Lakeshore.",
     mainfile_name_re='.+\.txt',

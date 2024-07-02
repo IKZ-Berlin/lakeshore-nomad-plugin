@@ -24,21 +24,29 @@ from nomad.parsing import MatchingParser
 from nomad.datamodel.metainfo.annotations import (
     ELNAnnotation,
 )
-from nomad.datamodel.data import (
-    EntryData,
-)
+from nomad.datamodel.data import EntryData
+
+from nomad.datamodel.datamodel import EntryArchive, EntryMetadata
+
+
+from lakeshore_nomad_plugin.hall import reader as hall_reader
 
 from lakeshore_nomad_plugin.hall.schema import (
     ExperimentLakeshoreHall,
     HallMeasurement,
     HallMeasurementReference,
+    HallMeasurementResult,
 )
 
-from nomad.datamodel.datamodel import EntryArchive, EntryMetadata
+from lakeshore_nomad_plugin.hall.utils import (
+    get_hash_ref,
+    create_archive, 
+    get_measurements,)
 
-from nomad.utils import hash
-from nomad.parsing.tabular import create_archive
-
+from lakeshore_nomad_plugin.hall.measurement import (
+    GenericMeasurement,
+    VariableFieldMeasurement,
+)
 
 class RawFileLakeshoreHall(EntryData):
     measurement = Quantity(
@@ -54,23 +62,51 @@ class HallMeasurementsParser(MatchingParser):
         data_file = mainfile.split("/")[-1]
         data_file_with_path = mainfile.split("raw/")[-1]
         filetype = "yaml"
-        meas_filename = f"{data_file[:-4]}_meas.archive.{filetype}"
-        measurement_archive = EntryArchive(
-            data=HallMeasurement(data_file=data_file_with_path),
+
+        hall_data = HallMeasurement(name=f"{data_file[:-4]}_meas")
+
+        logger.info("Parsing hall measurement measurement file.")
+        with archive.m_context.raw_file(
+            data_file_with_path, "r", encoding="unicode_escape"
+        ) as f:
+            data_template = hall_reader.parse_txt(f.name)
+            hall_data.measurements = list(get_measurements(data_template))
+
+        for measurement in hall_data.measurements:
+            if isinstance(measurement, VariableFieldMeasurement):
+                if (
+                    measurement.measurement_type == "Hall and Resistivity Measurement"
+                    and measurement.maximum_field == measurement.minimum_field
+                ):
+                    logger.info(
+                        "This measurement was detected as a single Field Room Temperature one."
+                    )
+                    hall_data.results.append(
+                        HallMeasurementResult(
+                            name="Room Temperature measurement",
+                            resistivity=measurement.results[0].resistivity,
+                            mobility=measurement.results[0].hall_mobility,
+                            carrier_concentration=measurement.results[0].carrier_density,
+                        )
+                    )
+
+        hall_filename = f"{data_file[:-4]}_meas.archive.{filetype}"
+        hall_archive = EntryArchive(
+            data=hall_data,
             m_context=archive.m_context,
             metadata=EntryMetadata(upload_id=archive.m_context.upload_id),
         )
 
         create_archive(
-            measurement_archive.m_to_dict(),
+            hall_archive.m_to_dict(),
             archive.m_context,
-            meas_filename,
+            hall_filename,
             filetype,
             logger,
         )
 
         archive.data = RawFileLakeshoreHall(
-            measurement=f"../uploads/{archive.m_context.upload_id}/archive/{hash(archive.m_context.upload_id, meas_filename)}#data"
+            measurement=get_hash_ref(archive.m_context.upload_id, hall_filename)
         )
         archive.metadata.entry_name = data_file + " measurement file"
         exp_file_name = f"{data_file[:-4]}_exp.archive.{filetype}"
@@ -78,7 +114,8 @@ class HallMeasurementsParser(MatchingParser):
             data=ExperimentLakeshoreHall(
                 measurement=[
                     HallMeasurementReference(
-                        reference=f"../uploads/{archive.m_context.upload_id}/archive/{hash(archive.m_context.upload_id, meas_filename)}#data"
+                        name=f"{data_file[:-4]}_meas",
+                        reference=get_hash_ref(archive.m_context.upload_id, hall_filename)
                     )
                 ]
             ),
