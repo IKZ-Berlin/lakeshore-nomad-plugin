@@ -40,13 +40,17 @@ from lakeshore_nomad_plugin.hall.schema import (
 
 from lakeshore_nomad_plugin.hall.utils import (
     get_hash_ref,
-    create_archive, 
-    get_measurements,)
+    create_archive,
+    get_measurements,
+)
 
 from lakeshore_nomad_plugin.hall.measurement import (
     GenericMeasurement,
     VariableFieldMeasurement,
+    IVCurveMeasurement,
+    VariableTemperatureMeasurement,
 )
+
 
 class RawFileLakeshoreHall(EntryData):
     measurement = Quantity(
@@ -72,23 +76,65 @@ class HallMeasurementsParser(MatchingParser):
             data_template = hall_reader.parse_txt(f.name)
             hall_data.measurements = list(get_measurements(data_template))
 
-        for measurement in hall_data.measurements:
-            if isinstance(measurement, VariableFieldMeasurement):
-                if (
-                    measurement.measurement_type == "Hall and Resistivity Measurement"
-                    and measurement.maximum_field == measurement.minimum_field
-                ):
-                    logger.info(
-                        "This measurement was detected as a single Field Room Temperature one."
-                    )
-                    hall_data.results.append(
-                        HallMeasurementResult(
-                            name="Room Temperature measurement",
-                            resistivity=measurement.results[0].resistivity,
-                            mobility=measurement.results[0].hall_mobility,
-                            carrier_concentration=measurement.results[0].carrier_density,
-                        )
-                    )
+        if (
+            len(
+                [
+                    meas
+                    for meas in hall_data.measurements
+                    if isinstance(meas, VariableFieldMeasurement)
+                ]
+            )
+            == 1
+            and len(
+                [
+                    meas
+                    for meas in hall_data.measurements
+                    if isinstance(meas, IVCurveMeasurement)
+                ]
+            )
+            == 1
+        ):
+            logger.info(
+                "This measurement was detected as a Room Temperature single magnetic field."
+            )
+            measurement = [
+                meas
+                for meas in hall_data.measurements
+                if isinstance(meas, VariableFieldMeasurement)
+            ][0]
+            hall_data.results.append(
+                HallMeasurementResult(
+                    name="Room Temperature measurement",
+                    resistivity=measurement.results[0].resistivity,
+                    mobility=measurement.results[0].hall_mobility,
+                    carrier_concentration=measurement.results[0].carrier_density,
+                )
+            )
+            hall_data.tags = ["Room Temperature"]
+        if (
+            len(
+                [
+                    meas
+                    for meas in hall_data.measurements
+                    if isinstance(meas, VariableFieldMeasurement)
+                ]
+            )
+            > 1
+        ):
+            logger.info("This measurement was detected as a Variable Field.")
+            hall_data.tags = ["Variable Field"]
+        if (
+            len(
+                [
+                    meas
+                    for meas in hall_data.measurements
+                    if isinstance(meas, VariableTemperatureMeasurement)
+                ]
+            )
+            >= 1
+        ):
+            logger.info("This measurement was detected as a Variable Temperature.")
+            hall_data.tags = ["Variable Temperature"]
 
         hall_filename = f"{data_file[:-4]}_meas.archive.{filetype}"
         hall_archive = EntryArchive(
@@ -115,7 +161,9 @@ class HallMeasurementsParser(MatchingParser):
                 measurement=[
                     HallMeasurementReference(
                         name=f"{data_file[:-4]}_meas",
-                        reference=get_hash_ref(archive.m_context.upload_id, hall_filename)
+                        reference=get_hash_ref(
+                            archive.m_context.upload_id, hall_filename
+                        ),
                     )
                 ]
             ),

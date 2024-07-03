@@ -16,6 +16,7 @@
 # limitations under the License.
 #
 """Utility functions for the NeXus reader classes."""
+
 from dataclasses import dataclass, replace
 from typing import List, Any, Dict, Optional, Tuple, Union, Generator
 from collections.abc import Mapping
@@ -38,12 +39,12 @@ from lakeshore_nomad_plugin.hall.measurement import (
     VariableFieldMeasurement,
     VariableFieldResults,
     IVCurveMeasurement,
-    IVResults
+    IVResults,
 )
 
 
 @dataclass
-class FlattenSettings():
+class FlattenSettings:
     """Settings for flattening operations.
 
     Args:
@@ -54,6 +55,7 @@ class FlattenSettings():
             Parent key of the dictionary. Defaults to "/ENTRY[entry]".
         sep (str, optional): Separator for the keys. Defaults to "/".
     """
+
     dic: Mapping
     convert_dict: dict
     replace_nested: dict
@@ -63,7 +65,7 @@ class FlattenSettings():
 
 
 def get_reference(upload_id, entry_id):
-    return f'../uploads/{upload_id}/archive/{entry_id}'
+    return f"../uploads/{upload_id}/archive/{entry_id}"
 
 
 def get_entry_id(upload_id, filename):
@@ -73,7 +75,7 @@ def get_entry_id(upload_id, filename):
 
 
 def get_hash_ref(upload_id, filename):
-    return f'{get_reference(upload_id, get_entry_id(upload_id, filename))}#data'
+    return f"{get_reference(upload_id, get_entry_id(upload_id, filename))}#data"
 
 
 def nan_equal(a, b):
@@ -125,21 +127,21 @@ def create_archive(
     if isinstance(context, ClientContext):
         return None
     if file_exists:
-        with context.raw_file(filename, 'r') as file:
+        with context.raw_file(filename, "r") as file:
             existing_dict = yaml.safe_load(file)
             dicts_are_equal = dict_nan_equal(existing_dict, entry_dict)
     if not file_exists or overwrite or dicts_are_equal:
-        with context.raw_file(filename, 'w') as newfile:
-            if file_type == 'json':
+        with context.raw_file(filename, "w") as newfile:
+            if file_type == "json":
                 json.dump(entry_dict, newfile)
-            elif file_type == 'yaml':
+            elif file_type == "yaml":
                 yaml.dump(entry_dict, newfile)
         context.upload.process_updated_raw_file(filename, allow_modify=True)
     elif file_exists and not overwrite and not dicts_are_equal:
         logger.error(
-            f'{filename} archive file already exists. '
-            f'You are trying to overwrite it with a different content. '
-            f'To do so, remove the existing archive and click reprocess again.'
+            f"{filename} archive file already exists. "
+            f"You are trying to overwrite it with a different content. "
+            f"To do so, remove the existing archive and click reprocess again."
         )
     return get_hash_ref(context.upload_id, filename)
 
@@ -236,11 +238,14 @@ def flatten_and_replace(settings: FlattenSettings) -> dict:
     """
     items: List[Any] = []
     for key, val in settings.dic.items():
-        new_key = settings.parent_key + settings.sep + settings.convert_dict.get(key, key)
+        new_key = (
+            settings.parent_key + settings.sep + settings.convert_dict.get(key, key)
+        )
         if isinstance(val, Mapping):
             items.extend(
-                flatten_and_replace(replace(settings, dic=val, parent_key=new_key))
-                .items()
+                flatten_and_replace(
+                    replace(settings, dic=val, parent_key=new_key)
+                ).items()
                 if not (settings.is_in_section and is_value_unit_pair(val))
                 else [[new_key, val]]
             )
@@ -258,9 +263,9 @@ def flatten_and_replace(settings: FlattenSettings) -> dict:
 
 
 def parse_yml(
-        file_path: str,
-        convert_dict: Optional[dict] = None,
-        replace_nested: Optional[dict] = None
+    file_path: str,
+    convert_dict: Optional[dict] = None,
+    replace_nested: Optional[dict] = None,
 ) -> Dict[str, Any]:
     """Parses a metadata yaml file into a dictionary.
 
@@ -278,12 +283,12 @@ def parse_yml(
 
     convert_dict["unit"] = "@units"
 
-    with open(file_path, encoding='utf-8') as file:
+    with open(file_path, encoding="utf-8") as file:
         return flatten_and_replace(
             FlattenSettings(
                 dic=yaml.safe_load(file),
                 convert_dict=convert_dict,
-                replace_nested=replace_nested
+                replace_nested=replace_nested,
             )
         )
 
@@ -302,20 +307,20 @@ def parse_json(file_path: str) -> Dict[str, Any]:
 
 
 def is_activity_section(section):
-    return any('Activity' in i.label for i in section.m_def.all_base_sections)
+    return any("Activity" in i.label for i in section.m_def.all_base_sections)
 
 
 def handle_section(section):
     from nomad.datamodel.metainfo.basesections import ExperimentStep
 
-    if hasattr(section, 'reference') and is_activity_section(section.reference):
+    if hasattr(section, "reference") and is_activity_section(section.reference):
         return [ExperimentStep(activity=section.reference, name=section.reference.name)]
-    if section.m_def.label == 'CharacterizationMovpe':
+    if section.m_def.label == "CharacterizationMovpe":
         sub_sect_list = []
         for sub_section in vars(section).values():
             if isinstance(sub_section, list):
                 for item in sub_section:
-                    if hasattr(item, 'reference') and is_activity_section(
+                    if hasattr(item, "reference") and is_activity_section(
                         item.reference
                     ):
                         sub_sect_list.append(
@@ -324,7 +329,7 @@ def handle_section(section):
                             )
                         )
         return sub_sect_list
-    if not hasattr(section, 'reference') and is_activity_section(section):
+    if not hasattr(section, "reference") and is_activity_section(section):
         return [ExperimentStep(activity=section, name=section.name)]
 
 
@@ -444,14 +449,14 @@ def to_bool(expr: str) -> bool:
         bool: The boolean value.
     """
     replacements = {
-        'On': True,
-        'Off': False,
-        'Yes': True,
-        'No': False,
-        'True': True,
-        'False': False,
-        'true': True,
-        'false': False,
+        "On": True,
+        "Off": False,
+        "Yes": True,
+        "No": False,
+        "True": True,
+        "False": False,
+        "true": True,
+        "false": False,
     }
 
     return replacements.get(expr)
@@ -510,11 +515,11 @@ def clean(unit: str) -> str:
         str: The cleaned unit string.
     """
     conversions = {
-        'VS': "volt * second",
-        'Sec': "s",
-        '²': "^2",
-        '³': "^3",
-        'ohm cm': "ohm * cm",
+        "VS": "volt * second",
+        "Sec": "s",
+        "²": "^2",
+        "³": "^3",
+        "ohm cm": "ohm * cm",
     }
 
     for old, new in conversions.items():
@@ -551,31 +556,31 @@ def pandas_df_to_template(prefix: str, data: pd.DataFrame) -> Dict[str, Any]:
     Returns:
         Dict[str, Any]: The dict containing the data and metainfo.
     """
-    if prefix.endswith('/'):
+    if prefix.endswith("/"):
         prefix = prefix[:-1]
 
     template: Dict[str, Any] = {}
-    template[f'{prefix}/@NX_class'] = 'NXdata'
+    template[f"{prefix}/@NX_class"] = "NXdata"
 
     def write_data(header: str, attr: str, data: np.ndarray) -> None:
         if header is None:
-            print('Warning: Trying to write dataframe without a header. Skipping.')
+            print("Warning: Trying to write dataframe without a header. Skipping.")
             return
 
         if is_value_with_unit(header):
             name, unit = split_str_with_unit(header)
-            template[f'{prefix}/{name}/@units'] = clean(unit)
+            template[f"{prefix}/{name}/@units"] = clean(unit)
         else:
             name = header.lower()
 
-        if attr == '@auxiliary_signals':
-            if f'{prefix}/{attr}' in template:
-                template[f'{prefix}/{attr}'].append(name)
+        if attr == "@auxiliary_signals":
+            if f"{prefix}/{attr}" in template:
+                template[f"{prefix}/{attr}"].append(name)
             else:
-                template[f'{prefix}/{attr}'] = [name]
+                template[f"{prefix}/{attr}"] = [name]
         else:
-            template[f'{prefix}/{attr}'] = name
-        template[f'{prefix}/{name}'] = data
+            template[f"{prefix}/{attr}"] = name
+        template[f"{prefix}/{name}"] = data
 
     if data.index.name is None:
         data = data.set_index(data.columns[0])
@@ -584,11 +589,11 @@ def pandas_df_to_template(prefix: str, data: pd.DataFrame) -> Dict[str, Any]:
     if data.index.values[-1] == 0:
         data = data.iloc[:-1]
 
-    write_data(data.index.name, '@axes', data.index.values)
-    write_data(data.columns[0], '@signal', data.iloc[:, 0].values)
+    write_data(data.index.name, "@axes", data.index.values)
+    write_data(data.columns[0], "@signal", data.iloc[:, 0].values)
 
     for column in data.columns[1:]:
-        write_data(column, '@auxiliary_signals', data[column].values)
+        write_data(column, "@auxiliary_signals", data[column].values)
 
     return template
 
@@ -605,11 +610,10 @@ def convert_date(datestr: str, timezone: str = "Europe/Berlin") -> str:
     """
 
     try:
-        for fmt in [r'%m/%d/%y %H%M%S', r'%d.%m.%Y %H%M%S', r'%d.%m.%Y %I%M%S %p']:
+        for fmt in [r"%m/%d/%y %H%M%S", r"%d.%m.%Y %H%M%S", r"%d.%m.%Y %I%M%S %p"]:
             try:
                 return (
-                    datetime
-                    .strptime(datestr, fmt)
+                    datetime.strptime(datestr, fmt)
                     .astimezone(pytz.timezone(timezone))
                     .isoformat()
                 )
@@ -621,7 +625,7 @@ def convert_date(datestr: str, timezone: str = "Europe/Berlin") -> str:
 
 
 def get_measurement_object(measurement_type: str) -> Measurement:
-    '''
+    """
     Gets a measurement MSection object from the given measurement type.
 
     Args:
@@ -629,18 +633,18 @@ def get_measurement_object(measurement_type: str) -> Measurement:
 
     Returns:
         Measurement: A MSection representing a Hall measurement.
-    '''
-    if measurement_type == 'Variable Temperature Measurement':
+    """
+    if measurement_type == "Variable Temperature Measurement":
         return VariableTemperatureMeasurement()
-    if measurement_type == 'Variable Field Measurement':
+    if measurement_type == "Variable Field Measurement":
         return VariableFieldMeasurement()
-    if measurement_type == 'IV Curve Measurement':
+    if measurement_type == "IV Curve Measurement":
         return IVCurveMeasurement()
     return Measurement()
 
 
 def get_data_object(measurement_type: str):
-    '''
+    """
     Gets a measurement data MSection object from the given measurement type.
 
     Args:
@@ -648,12 +652,12 @@ def get_data_object(measurement_type: str):
 
     Returns:
         A MSection representing a Hall measurement data object.
-    '''
-    if measurement_type == 'Variable Temperature Measurement':
+    """
+    if measurement_type == "Variable Temperature Measurement":
         return VariableTemperatureResults()
-    if measurement_type == 'Variable Field Measurement':
+    if measurement_type == "Variable Field Measurement":
         return VariableFieldResults()
-    if measurement_type == 'IV Curve Measurement':
+    if measurement_type == "IV Curve Measurement":
         return IVResults()
     return None
 
@@ -677,22 +681,24 @@ def to_snake_case(string: str) -> str:
         'my_string_dashed_ls56_sep_ac/test_ls58/@with_unit_345'
     """
 
-    string = string.replace('-', '_')
-    string = re.sub(r'(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])', '_', string)
+    string = string.replace("-", "_")
+    string = re.sub(r"(?<=[a-z])(?=[A-Z])|(?<=[A-Z])(?=[A-Z][a-z])", "_", string)
     string = string.lower()
-    string = re.sub(r'_{2,}', '_', string)
-    string = re.sub(r'\b\d+\b', lambda match: match.group(0).replace('.', '_'), string)
-    string = re.sub(r'\b(?<!\d)[A-Z]{2,}(?!\w)', lambda match: match.group(0).lower(), string)
-    string = string.replace(' ', '_')
-    string = re.sub(r'(?<=/)_', '', string)
-    string = re.sub(r'_(?=/)', '', string)
-    string = re.sub(r'_{2,}', '_', string)
+    string = re.sub(r"_{2,}", "_", string)
+    string = re.sub(r"\b\d+\b", lambda match: match.group(0).replace(".", "_"), string)
+    string = re.sub(
+        r"\b(?<!\d)[A-Z]{2,}(?!\w)", lambda match: match.group(0).lower(), string
+    )
+    string = string.replace(" ", "_")
+    string = re.sub(r"(?<=/)_", "", string)
+    string = re.sub(r"_(?=/)", "", string)
+    string = re.sub(r"_{2,}", "_", string)
 
     return string
 
 
 def split_value_unit(expr: str) -> Tuple[str, Optional[str]]:
-    '''
+    """
     Searches for a value unit pair and returns the values for a combination
     `value [unit]`.
 
@@ -704,8 +710,8 @@ def split_value_unit(expr: str) -> Tuple[str, Optional[str]]:
             A tuple of value and unit.
             Returns the expr, where spaces are replaced with `_` and None when no
             value unit expression is found.
-    '''
-    is_value_unit = re.search(r'([^\[]+)\s\[(.*)\]', expr)
+    """
+    is_value_unit = re.search(r"([^\[]+)\s\[(.*)\]", expr)
     if is_value_unit:
         value = to_snake_case(is_value_unit.group(1))
         unit = is_value_unit.group(2)
@@ -714,7 +720,7 @@ def split_value_unit(expr: str) -> Tuple[str, Optional[str]]:
 
 
 def rename_key(key: str) -> str:
-    '''
+    """
     Renames the key from the file to the eln
 
     Args:
@@ -722,18 +728,17 @@ def rename_key(key: str) -> str:
 
     Returns:
         str: The key replaced with its eln counterpart
-    '''
+    """
     key_map = {
-        'use_zero_field_resistivity_to_calculate_hall_mobility':
-            'use_zero_field_resistivity',
-        'at_field': 'field_at_zero_resistivity',
-        'at_temperature': 'temperature_at_zero_resistivity'
+        "use_zero_field_resistivity_to_calculate_hall_mobility": "use_zero_field_resistivity",
+        "at_field": "field_at_zero_resistivity",
+        "at_temperature": "temperature_at_zero_resistivity",
     }
     return key_map.get(key, key)
 
 
 def calc_best_fit_values(iv_measurement: IVResults) -> IVResults:
-    '''
+    """
     Calculates the best fit voltage values from the provided
     fitting data.
 
@@ -742,7 +747,7 @@ def calc_best_fit_values(iv_measurement: IVResults) -> IVResults:
 
     Returns:
         IVResults: The IVResults with discret best fit values
-    '''
+    """
     iv_measurement.best_fit_values = (
         iv_measurement.current * iv_measurement.best_fit_resistance
         + iv_measurement.best_fit_offset
@@ -752,7 +757,7 @@ def calc_best_fit_values(iv_measurement: IVResults) -> IVResults:
 
 
 def get_measurements(data_template: dict) -> Generator[Measurement, None, None]:
-    '''
+    """
     Returns a hall measurement MSection representation form its corresponding
     nexus data_template.
 
@@ -762,11 +767,11 @@ def get_measurements(data_template: dict) -> Generator[Measurement, None, None]:
     Yields:
         Generator[Measurement, None, None]:
             A generator yielding the single hall measurements.
-    '''
+    """
     highest_index = 1
 
     for key in data_template:
-        if bool(re.search(f'^/entry/measurement/{highest_index}_.+/', key)):
+        if bool(re.search(f"^/entry/measurement/{highest_index}_.+/", key)):
             highest_index += 1
 
     for measurement_index in range(1, highest_index):
@@ -775,99 +780,117 @@ def get_measurements(data_template: dict) -> Generator[Measurement, None, None]:
         contact_sets: dict = {}
 
         for key in data_template:
-            if not key.startswith(f'/entry/measurement/{measurement_index}_'):
+            if not key.startswith(f"/entry/measurement/{measurement_index}_"):
                 continue
 
             if first:
                 measurement_type = re.search(
-                    f'measurement/{measurement_index}_([^/]+)/', key
+                    f"measurement/{measurement_index}_([^/]+)/", key
                 ).group(1)
                 first = False
                 eln_measurement = get_measurement_object(measurement_type)
 
-            clean_key = to_snake_case(key.split(f'{measurement_type}/')[1])
+            clean_key = to_snake_case(key.split(f"{measurement_type}/")[1])
 
-            regexp = re.compile('/data(\\d+)/')
-            if bool(regexp.search(key)):
-                data_index = regexp.search(key).group(1)
-                if data_index not in data_entries:
-                    data_entries[data_index] = get_data_object(measurement_type)
-                clean_dkey = clean_key.split(f'data{data_index}/')[1]
-                if hasattr(data_entries[data_index], clean_dkey):
-                    if f'{key}/@units' in data_template:
-                        setattr(
-                            data_entries[data_index],
-                            clean_dkey,
-                            data_template[key].astype(np.float64) * ureg(data_template[f'{key}/@units'])
-                        )
-                    else:
-                        setattr(data_entries[data_index], clean_dkey, data_template[key])
-                continue
-
-            if '/Contact Sets/' in key:
-                contact_set = re.search('/Contact Sets/([^/]+)/', key).group(1)
+            if "/Contact Sets/" in key:
+                contact_set = re.search("/Contact Sets/([^/]+)/", key).group(1)
                 if contact_set not in contact_sets:
                     contact_sets[contact_set] = get_data_object(measurement_type)
-                clean_dkey = clean_key.split(f'{contact_set.lower()}/')[1]
+                clean_dkey = clean_key.split(f"{contact_set.lower()}/")[1]
                 contact_sets[contact_set].contact_set = contact_set
 
-                if 'data0' in key:
+                if "data0" in key:
                     data = data_template[key]
 
                     for column in data.columns:
-                        if (data[column] == 'ERROR').all():
+                        if (data[column] == "ERROR").all():
+                            continue
+                        if data[column].isna().all():
                             continue
                         col, unit = split_value_unit(column)
-                        clean_col = col.lower().replace(' ', '_')
+                        clean_col = col.lower().replace(" ", "_")
                         if hasattr(contact_sets[contact_set], clean_col):
                             if unit is not None:
                                 setattr(
                                     contact_sets[contact_set],
                                     clean_col,
-                                    data[column].astype(np.float64) * ureg(unit)
+                                    pd.to_numeric(
+                                        data[column], errors="coerce"
+                                    )  # data[column].astype(np.float64)
+                                    * ureg(unit),
                                 )
                             else:
                                 setattr(
-                                    contact_sets[contact_set], clean_col, data[column]
+                                    contact_sets[contact_set],
+                                    clean_col,
+                                    data[column],
                                 )
                     continue
 
-                clean_dkey, unit = split_value_unit(key.split(f'{contact_set}/')[1])
+                clean_dkey, unit = split_value_unit(key.split(f"{contact_set}/")[1])
                 if hasattr(contact_sets[contact_set], clean_dkey):
                     if unit is not None:
                         setattr(
                             contact_sets[contact_set],
                             clean_dkey,
-                            data_template[key] * ureg(unit)
+                            data_template[key] * ureg(unit),
                         )
-                    elif f'{key}/@units' in data_template:
+                    elif f"{key}/@units" in data_template:
                         setattr(
                             contact_sets[contact_set],
                             clean_dkey,
-                            data_template[key] * ureg(data_template[f'{key}/@units'])
+                            data_template[key] * ureg(data_template[f"{key}/@units"]),
                         )
                     else:
                         setattr(
-                            contact_sets[contact_set], clean_dkey, data_template[key]
+                            contact_sets[contact_set],
+                            clean_dkey,
+                            data_template[key],
                         )
                 continue
 
-            clean_key, unit = split_value_unit(key.split(f'{measurement_type}/')[1])
+            regexp = re.compile("/data(\\d+)/")
+            if bool(regexp.search(key)):
+                data_index = regexp.search(key).group(1)
+                if data_index not in data_entries:
+                    data_entries[data_index] = get_data_object(measurement_type)
+                clean_dkey = clean_key.split(f"data{data_index}/")[1]
+                if hasattr(data_entries[data_index], clean_dkey):
+                    if f"{key}/@units" in data_template:
+                        setattr(
+                            data_entries[data_index],
+                            clean_dkey,
+                            pd.to_numeric(
+                                data_template[key], errors="coerce"
+                            )  # data_template[key].astype(np.float64)
+                            * ureg(data_template[f"{key}/@units"]),
+                        )
+                    else:
+                        setattr(
+                            data_entries[data_index],
+                            clean_dkey,
+                            data_template[key],
+                        )
+                continue
+
+            clean_key, unit = split_value_unit(key.split(f"{measurement_type}/")[1])
             clean_key = rename_key(clean_key)
             if hasattr(eln_measurement, clean_key):
-                if f'{key}/@units' in data_template:
+                if f"{key}/@units" in data_template:
                     setattr(
                         eln_measurement,
                         clean_key,
-                        data_template[key] * ureg(data_template[f'{key}/@units'])
+                        data_template[key] * ureg(data_template[f"{key}/@units"]),
                     )
                 elif unit is not None:
-                    if data_template[key] == 'ERROR':
+                    if data_template[key] == "ERROR":
+                        continue
+                    if not pd.isna(data_template[key]):
                         continue
                     setattr(
                         eln_measurement,
                         clean_key,
-                        data_template[key] * ureg(unit)
+                        data_template[key] * ureg(unit),
                     )
                 else:
                     setattr(eln_measurement, clean_key, data_template[key])
@@ -878,27 +901,27 @@ def get_measurements(data_template: dict) -> Generator[Measurement, None, None]:
 
         for data_entry in contact_sets.values():
             eln_measurement.results.append(calc_best_fit_values(data_entry))
-        
-        if measurement_type == 'Variable Temperature Measurement':
-            eln_measurement.name = f'{measurement_type}: range {eln_measurement.starting_temperature} -> {eln_measurement.ending_temperature}'
-        elif measurement_type == 'Variable Field Measurement':
-            eln_measurement.name = f'{measurement_type}: range {eln_measurement.minimum_field} -> {eln_measurement.maximum_field}'
+
+        if measurement_type == "Variable Temperature Measurement":
+            eln_measurement.name = f"{measurement_type}: range {eln_measurement.starting_temperature} -> {eln_measurement.ending_temperature}"
+        elif measurement_type == "Variable Field Measurement":
+            eln_measurement.name = f"{measurement_type}: range {eln_measurement.minimum_field} -> {eln_measurement.maximum_field}"
         else:
-            eln_measurement.name = f'{measurement_type}'
+            eln_measurement.name = f"{measurement_type}"
 
         yield eln_measurement
 
 
 def instantiate_keithley(system, field_key, value, logger):
-    '''
+    """
     Create an instance of a Keithley component class.
 
     The class is choosen among the available ones in instrument module,
     based on which value is found in the `measurement_state_machine` section.
-    '''
+    """
 
-    subsection_key = field_key.replace('_', '')
-    subsection_value = value.replace(' ', '')
+    subsection_key = field_key.replace("_", "")
+    subsection_value = value.replace(" ", "")
     for attr_name, attr_class in vars(hall_instrument).items():
         if to_snake_case(subsection_value) in to_snake_case(attr_name):
             logger.info(f"The {field_key} is {value}")
@@ -909,7 +932,7 @@ def instantiate_keithley(system, field_key, value, logger):
 
 
 def get_instrument(data_template: dict, logger):
-    '''
+    """
     Returns a hall instrument MSection representation form its corresponding
     nexus data_template.
 
@@ -918,37 +941,37 @@ def get_instrument(data_template: dict, logger):
 
     Yields:
         an Instrument object according to the schema in instrument.py
-    '''
+    """
 
-    keithley_devices = ['electro_meter',
-                        'volt_meter',
-                        'current_meter',
-                        'current_source'
-                        ]
+    keithley_devices = [
+        "electro_meter",
+        "volt_meter",
+        "current_meter",
+        "current_source",
+    ]
     keithley_components = {}
-    other_components = ['system_parameters',
-                        'temperature_controller',
-                        'field_controller'
-                        ]
+    other_components = [
+        "system_parameters",
+        "temperature_controller",
+        "field_controller",
+    ]
     instrument = hall_instrument.Instrument()
     instrument.temperature_controller = hall_instrument.TemperatureController()
     instrument.field_controller = hall_instrument.FieldController()
     temperature_domains: dict = {}
     for key in data_template:
         clean_key = to_snake_case(key)
-        field_key = clean_key.split('/')[-1]
+        field_key = clean_key.split("/")[-1]
         value = data_template[key]
         if "/measurement_state_machine/" in clean_key:
             if hasattr(instrument, field_key):
                 setattr(instrument, field_key, value)
                 for k_device in keithley_devices:
-                    if k_device == clean_key.split('/measurement_state_machine/')[1]:
-                        keithley_components[k_device.replace('_', '')
-                                            ] = instantiate_keithley(instrument,
-                                                                     field_key,
-                                                                     value,
-                                                                     logger)
-        regexp = re.compile('temperature_domain_(\\d+)/')
+                    if k_device == clean_key.split("/measurement_state_machine/")[1]:
+                        keithley_components[k_device.replace("_", "")] = (
+                            instantiate_keithley(instrument, field_key, value, logger)
+                        )
+        regexp = re.compile("temperature_domain_(\\d+)/")
         if bool(regexp.search(clean_key)):
             data_index = regexp.search(clean_key).group(1)
             if data_index not in temperature_domains:
@@ -964,14 +987,16 @@ def get_instrument(data_template: dict, logger):
                     if hasattr(getattr(instrument, instrument_comp), field_key):
                         setattr(getattr(instrument, instrument_comp), field_key, value)
         for instrument_comp in list(keithley_components.keys()):
-            if instrument_comp is not None and f"/{keithley_components[instrument_comp]}/" in clean_key:
-                if hasattr(instrument, instrument_comp) and \
-                    hasattr(getattr(instrument, instrument_comp),
-                            field_key):
-                    setattr(getattr(instrument, instrument_comp),
-                            field_key, value)
+            if (
+                instrument_comp is not None
+                and f"/{keithley_components[instrument_comp]}/" in clean_key
+            ):
+                if hasattr(instrument, instrument_comp) and hasattr(
+                    getattr(instrument, instrument_comp), field_key
+                ):
+                    setattr(getattr(instrument, instrument_comp), field_key, value)
     for t_domain in temperature_domains.values():
-        instrument.m_add_sub_section(hall_instrument.Instrument.temperature_domain, t_domain)
-    #print(f"{keithley_components}")
-    #print(f"{list(keithley_components.keys())}")
+        instrument.m_add_sub_section(
+            hall_instrument.Instrument.temperature_domain, t_domain
+        )
     return instrument
