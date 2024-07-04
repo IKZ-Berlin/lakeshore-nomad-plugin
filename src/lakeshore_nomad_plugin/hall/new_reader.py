@@ -1,8 +1,20 @@
 import re
 import json
 
+from nomad.units import ureg
 
-def parse_file_to_dict(filepath):
+from lakeshore_nomad_plugin.hall.measurement import (
+    GenericMeasurement,
+    VariableTemperatureMeasurement,
+    VariableTemperatureResults,
+    VariableFieldMeasurement,
+    VariableFieldResults,
+    IVCurveMeasurement,
+    IVResults,
+)
+
+
+def parse_file(filepath):
     with open(filepath, "r", encoding="latin1") as file:
         content = file.read()
 
@@ -31,7 +43,6 @@ def parse_file_to_dict(filepath):
                     lines = contact_set_content.strip().split("\n")
                     contact_set = {"Name": re.split(r"[=|:]", lines[0])[1].strip()}
                     for index, line in enumerate(lines[1:]):
-
                         parts = re.split(r"[=|:]", line, maxsplit=1)
                         if len(parts) == 2:
                             key, value = parts
@@ -57,7 +68,7 @@ def parse_file_to_dict(filepath):
                                 ]
                                 contact_set[
                                     f"{parameter.split('[')[0].strip()}_unit"
-                                ] = (parameter.split("[")[1].split("]")[0].strip())
+                                ] = parameter.split("[")[1].split("]")[0].strip()
                             break
                     params_lists.append(contact_set)
 
@@ -124,3 +135,137 @@ def parse_file_to_dict(filepath):
                     data_dict[section_name][subsection_name] = {}
 
     return data_dict
+
+
+def populate_archive():
+    data = parse_file("hall_measurement.txt")
+    measurement_objects = []
+    for meas_step in data["Measurements"].keys():
+        if meas_step == "Variable Temperature Measurement":
+            measurement_objects.append(
+                VariableTemperatureMeasurement(
+                    start_time=meas_step["Start Time"],
+                    time_completed=meas_step["Time Completed"],
+                    elapsed_time=meas_step["Elapsed Time"],
+                    starting_temperature=meas_step["Starting Temperature"]
+                    * ureg(meas_step["Starting Temperature_unit"])
+                    .to("kelvin")
+                    .magnitude
+                    if "Starting Temperature" in meas_step
+                    and "Starting Temperature_unit" in meas_step
+                    else meas_step["Starting Temperature"],
+                    ending_temperature=meas_step["Ending Temperature"]
+                    * ureg(meas_step["Ending Temperature_unit"]).to("kelvin").magnitude
+                    if "Ending Temperature" in meas_step
+                    and "Ending Temperature_unit" in meas_step
+                    else meas_step["Ending Temperature"],
+                    spacing=meas_step["Spacing"],
+                    temperature_step=meas_step["Temperature Step"]
+                    * ureg(meas_step["Temperature Step_unit"]).to("kelvin").magnitude
+                    if "Temperature Step" in meas_step
+                    and "Temperature Step_unit" in meas_step
+                    else meas_step["Temperature Step"],
+                    field_at=meas_step["Field at"]
+                    * ureg(meas_step["Field at_unit"]).to("tesla").magnitude
+                    if "Field at" in meas_step and "Field at_unit" in meas_step
+                    else meas_step["Field at"],
+                    measurement_type=meas_step["Measurement Type"],
+                    excitation_current=meas_step["Excitation Current"]
+                    * ureg(meas_step["Excitation Current_unit"]).to("ampere").magnitude
+                    if "Excitation Current" in meas_step
+                    and "Excitation Current_unit" in meas_step
+                    else meas_step["Excitation Current"],
+                    resistance_range=meas_step["Resistance Range"],
+                    dwell_time=meas_step["Dwell Time"]
+                    * ureg(meas_step["Dwell Time_unit"]).to("second").magnitude
+                    if "Dwell Time" in meas_step and "Dwell Time_unit" in meas_step
+                    else meas_step["Dwell Time"],
+                    current_reversal=meas_step["Current Reversal"],
+                    geometry_selection=meas_step["Geometry Selection"],
+                )
+            )
+        if meas_step == "Variable Field Measurement":
+            measurement_objects.append(
+                VariableFieldMeasurement(
+                    start_time=meas_step["Start Time"],
+                    time_completed=meas_step["Time Completed"],
+                    elapsed_time=meas_step["Elapsed Time"],
+                    field_profile=meas_step["Field Profile"],
+                    maximum_field=meas_step["Maximum Field"]
+                    * ureg(meas_step["Maximum Field_unit"]).to("tesla").magnitude
+                    if "Maximum Field" in meas_step
+                    and "Maximum Field_unit" in meas_step
+                    else meas_step["Maximum Field"],
+                    minimum_field=meas_step["Minimum Field"]
+                    * ureg(meas_step["Minimum Field_unit"]).to("tesla").magnitude
+                    if "Minimum Field" in meas_step
+                    and "Minimum Field_unit" in meas_step
+                    else meas_step["Minimum Field"],
+                    field_step=meas_step["Field Step"]
+                    * ureg(meas_step["Field Step_unit"]).to("tesla").magnitude
+                    if "Field Step" in meas_step and "Field Step_unit" in meas_step
+                    else meas_step["Field Step"],
+                    direction=meas_step["Direction"],
+                    measurement_type=meas_step["Measurement Type"],
+                    excitation_current=meas_step["Excitation Current"]
+                    * ureg(meas_step["Excitation Current_unit"]).to("ampere").magnitude
+                    if "Excitation Current" in meas_step
+                    and "Excitation Current_unit" in meas_step
+                    else meas_step["Excitation Current"],
+                    resistance_range=meas_step["Resistance Range"],
+                    dwell_time=meas_step["Dwell Time"]
+                    * ureg(meas_step["Dwell Time_unit"]).to("second").magnitude
+                    if "Dwell Time" in meas_step and "Dwell Time_unit" in meas_step
+                    else meas_step["Dwell Time"],
+                    current_reversal=meas_step["Current Reversal"],
+                    geometry_selection=meas_step["Geometry Selection"],
+                    use_zero_field_resistivity=meas_step[
+                        "Use Zero-field Resistivity to calculate Hall Mobility"
+                    ],
+                    zero_field_resistivity=meas_step["Zero-field Resistivity"]
+                    * ureg(meas_step["Zero-field Resistivity_unit"])
+                    .to("ohm meter")
+                    .magnitude
+                    if "Zero-field Resistivity" in meas_step
+                    and "Zero-field Resistivity_unit" in meas_step
+                    else meas_step["Zero-field Resistivity"],
+                    field_at_zero_resistivity=meas_step["at Field"]
+                    * ureg(meas_step["At Field_unit"]).to("tesla").magnitude
+                    if "At Field" in meas_step and "At Field_unit" in meas_step
+                    else meas_step["At Field"],
+                    temperature_at_zero_resistivity=meas_step["at Temperature"]
+                    * ureg(meas_step["At Temperature_unit"]).to("kelvin").magnitude
+                    if "At Temperature" in meas_step
+                    and "At Temperature_unit" in meas_step
+                    else meas_step["At Temperature"],
+                )
+            )
+        if meas_step == "IV Curve Measurement":
+            measurement_objects.append(
+                IVCurveMeasurement(
+                    start_time=meas_step["Start Time"],
+                    time_completed=meas_step["Time Completed"],
+                    elapsed_time=meas_step["Elapsed Time"],
+                    starting_current=meas_step["Starting Current"]
+                    * ureg(meas_step["Starting Current_unit"]).to("ampere").magnitude
+                    if "Starting Current" in meas_step
+                    and "Starting Current_unit" in meas_step
+                    else meas_step["Starting Current"],
+                    ending_current=meas_step["Ending Current"]
+                    * ureg(meas_step["Ending Current_unit"]).to("ampere").magnitude
+                    if "Ending Current" in meas_step
+                    and "Ending Current_unit" in meas_step
+                    else meas_step["Ending Current"],
+                    current_step=meas_step["Current Step"]
+                    * ureg(meas_step["Current Step_unit"]).to("ampere").magnitude
+                    if "Current Step" in meas_step and "Current Step_unit" in meas_step
+                    else meas_step["Current Step"],
+                    resistance_range=meas_step["Resistance Range"],
+                    dwell_time=meas_step["Dwell Time"]
+                    * ureg(meas_step["Dwell Time_unit"]).to("second").magnitude
+                    if "Dwell Time" in meas_step and "Dwell Time_unit" in meas_step
+                    else meas_step["Dwell Time"],
+                )
+            )
+        else:
+            measurement_objects.append(GenericMeasurement())
