@@ -26,4 +26,7 @@
   "python.testing.unittestEnabled": false,
   "editor.defaultFormatter": "charliermarsh.ruff",
   "editor.formatOnSave": true,
+  "[json]": {
+    "editor.defaultFormatter": "vscode.json-language-features"
+  },
 }
