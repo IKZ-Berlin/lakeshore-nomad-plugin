@@ -42,6 +42,11 @@ file = "LICENSE"
 "Homepage" = "https://github.com/FAIRmat-NFDI/nomad-material-processing"
 "Bug Tracker" = "https://github.com/FAIRmat-NFDI/nomad-material-processing/issues"
 
+# this is entirely optional, you can remove this if you wish to
+[tool.ruff.format]
+# use single quotes for strings.
+quote-style = "single"
+
 [tool.setuptools.packages.find]
 where = [
     "src",
