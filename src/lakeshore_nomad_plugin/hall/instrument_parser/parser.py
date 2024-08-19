@@ -55,7 +55,7 @@ class HallInstrumentParser(MatchingParser):
         data_file = mainfile.split("/")[-1]
         data_file_with_path = mainfile.split("raw/")[-1]
         filetype = "yaml"
-        
+
         instrument_data = HallInstrument()
 
         logger.info("Parsing hall measurement instrument file.")

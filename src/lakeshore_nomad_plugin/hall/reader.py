@@ -1,4 +1,5 @@
 """Lake Shore Hall file reader implementation for the DataConverter."""
+
 from pathlib import Path
 import re
 from typing import Any, List, TextIO, Dict, Optional
@@ -34,10 +35,12 @@ class BaseReader(ABC):
     supported_nxdls = [""]
 
     @abstractmethod
-    def read(self,
-             template: dict = None,
-             file_paths: Tuple[str] = None,
-             objects: Tuple[Any] = None) -> dict:
+    def read(
+        self,
+        template: dict = None,
+        file_paths: Tuple[str] = None,
+        objects: Tuple[Any] = None,
+    ) -> dict:
         """Reads data from given file and returns a filled template dictionary"""
         return template
 
@@ -51,10 +54,9 @@ class YamlJsonReader(BaseReader):
     supported_nxdls: List[str] = []
     extensions: Dict[str, Callable[[str], dict]] = {}
 
-    def read(self,
-             template: dict = None,
-             file_paths: Tuple[str] = None,
-             _: Tuple[Any] = None) -> dict:
+    def read(
+        self, template: dict = None, file_paths: Tuple[str] = None, _: Tuple[Any] = None
+    ) -> dict:
         """
         Reads data from multiple files and passes them to the appropriate functions
         in the extensions dict.
@@ -80,7 +82,6 @@ class YamlJsonReader(BaseReader):
         return template
 
 
-
 # Replacement dict for section names
 SECTION_REPLACEMENTS = {
     "Sample parameters": "entry/sample",
@@ -97,7 +98,7 @@ MEASUREMENT_REPLACEMENTS = {
 CONVERSION_FUNCTIONS = {
     "Start Time": utils.convert_date,
     "Time Completed": utils.convert_date,
-    "Skipped at": utils.convert_date
+    "Skipped at": utils.convert_date,
 }
 
 # Keys that indicate the start of measurement block
@@ -127,7 +128,7 @@ def split_add_key(fobj: Optional[TextIO], dic: dict, prefix: str, expr: str) -> 
 
     def parse_enum() -> bool:
         sprefix = prefix.strip("/")
-        if 'Keithley' not in sprefix:
+        if "Keithley" not in sprefix:
             w_trailing_num = re.search(r"(.*) \d+$", sprefix)
             if w_trailing_num:
                 sprefix = w_trailing_num.group(1)
@@ -185,9 +186,9 @@ def split_add_key(fobj: Optional[TextIO], dic: dict, prefix: str, expr: str) -> 
             data.append(list(map(lambda x: x.strip(), re.split("\t+", line))))
 
         dkey = utils.get_unique_dkey(dic, f"{prefix}/{key}/{jval}/data")
-        dic[dkey] = pd.DataFrame(
-            np.array(data[1:]), columns=data[0]
-        ).apply(pd.to_numeric, args=('coerce',))
+        dic[dkey] = pd.DataFrame(np.array(data[1:]), columns=data[0]).apply(
+            pd.to_numeric, args=("coerce",)
+        )
 
     if fobj is not None and key in MEASUREMENT_KEYS:
         parse_data()
@@ -207,7 +208,10 @@ def parse_txt(fname: str, encoding: str = "utf-8") -> dict:
     Returns:
         dict: Dict containing the data and metadata of the measurement
     """
-    def parse_measurement(line_number: int, line: str, current_section: str, current_measurement: str):
+
+    def parse_measurement(
+        line_number: int, line: str, current_section: str, current_measurement: str
+    ):
         data = []
         nested_line_number = 0
         for mline in fobj:
@@ -221,17 +225,22 @@ def parse_txt(fname: str, encoding: str = "utf-8") -> dict:
         dkey = utils.get_unique_dkey(
             template, f"{current_section}{current_measurement}/data"
         )
-        template.update(utils.pandas_df_to_template(
-            dkey,
-            pd.DataFrame(
-                #np.array(data, dtype=np.float64), columns=header # !! type check skipped
-                np.array(data), columns=header
-            ).apply(pd.to_numeric, args=('coerce',))
-        ))
+        template.update(
+            utils.pandas_df_to_template(
+                dkey,
+                pd.DataFrame(
+                    # np.array(data, dtype=np.float64), columns=header # !! type check skipped
+                    np.array(data),
+                    columns=header,
+                ).apply(pd.to_numeric, args=("coerce",)),
+            )
+        )
 
         return current_section, current_measurement, nested_line_number
 
-    def parse(line_number: int, line: str, current_section: str, current_measurement: str):
+    def parse(
+        line_number: int, line: str, current_section: str, current_measurement: str
+    ):
         if utils.has_section_format(line):
             print(f"LINE {line_number}: SECTION. {line}")
             sline = line.strip()[1:-1]
@@ -255,7 +264,9 @@ def parse_txt(fname: str, encoding: str = "utf-8") -> dict:
 
         if utils.is_meas_header(line):
             print(f"LINE {line_number}: MEAS HEADER. {line}")
-            return parse_measurement(line_number, line, current_section, current_measurement)
+            return parse_measurement(
+                line_number, line, current_section, current_measurement
+            )
 
         print(f"LINE {line_number}: NO OTHER OPTION. {line}")
         if line.strip():
