@@ -49,7 +49,7 @@ from nomad.datamodel.metainfo.basesections import (
     Experiment,
 )
 
-from nomad_measurements import (
+from nomad_measurements.general.schema import (
     ActivityReference,
 )
 
@@ -66,13 +66,13 @@ from lakeshore_nomad_plugin.hall.instrument import Instrument
 
 from lakeshore_nomad_plugin.hall.utils import handle_section
 
-configuration = config.get_plugin_entry_point('lakeshore_nomad_plugin.hall:schema')
+configuration = config.get_plugin_entry_point("lakeshore_nomad_plugin.hall:schema")
 
 m_package = SchemaPackage()
 
 
 class IKZHallCategory(EntryDataCategory):
-    m_def = Category(label='Hall', categories=[EntryDataCategory])
+    m_def = Category(label="Hall", categories=[EntryDataCategory])
 
 
 class HallMeasurementResult(MeasurementResult):
@@ -82,24 +82,24 @@ class HallMeasurementResult(MeasurementResult):
 
     resistivity = Quantity(
         type=np.float64,
-        description='FILL',
-        a_eln={'component': 'NumberEditQuantity', 'defaultDisplayUnit': 'ohm * cm'},
-        unit='ohm * cm',
+        description="FILL",
+        a_eln={"component": "NumberEditQuantity", "defaultDisplayUnit": "ohm * cm"},
+        unit="ohm * cm",
     )
     mobility = Quantity(
         type=np.float64,
-        description='FILL',
+        description="FILL",
         a_eln={
-            'component': 'NumberEditQuantity',
-            'defaultDisplayUnit': 'cm**2 / volt / second',
+            "component": "NumberEditQuantity",
+            "defaultDisplayUnit": "cm**2 / volt / second",
         },
-        unit='cm**2 / volt / second',
+        unit="cm**2 / volt / second",
     )
     carrier_concentration = Quantity(
         type=np.float64,
-        description='FILL',
-        a_eln={'component': 'NumberEditQuantity', 'defaultDisplayUnit': '1 / cm**3'},
-        unit='1 / cm**3',
+        description="FILL",
+        a_eln={"component": "NumberEditQuantity", "defaultDisplayUnit": "1 / cm**3"},
+        unit="1 / cm**3",
     )
 
 
@@ -114,21 +114,21 @@ class HallMeasurement(Measurement, EntryData):
     )
     data_file = Quantity(
         type=str,
-        a_eln=dict(component='FileEditQuantity'),
-        a_browser=dict(adaptor='RawFileAdaptor'),
+        a_eln=dict(component="FileEditQuantity"),
+        a_browser=dict(adaptor="RawFileAdaptor"),
     )
     tags = Quantity(
         type=str,
-        shape=['*'],
-        description='Add a tag that can be used for search.',
-        a_eln=dict(component='StringEditQuantity'),
+        shape=["*"],
+        description="Add a tag that can be used for search.",
+        a_eln=dict(component="StringEditQuantity"),
     )
     description = Quantity(
         type=str,
-        description='description',
+        description="description",
         a_eln=ELNAnnotation(
-            component='StringEditQuantity',
-            label='Notes',
+            component="StringEditQuantity",
+            label="Notes",
         ),
     )
 
@@ -150,10 +150,10 @@ class HallMeasurementReference(SectionReference):
 
     reference = Quantity(
         type=HallMeasurement,
-        description='A reference to a NOMAD `HallMeasurement` entry.',
+        description="A reference to a NOMAD `HallMeasurement` entry.",
         a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity',
-            label='Hall Measurement Reference',
+            component="ReferenceEditQuantity",
+            label="Hall Measurement Reference",
         ),
     )
 
@@ -168,8 +168,8 @@ class HallInstrument(Instrument, EntryData):
     )
     data_file = Quantity(
         type=str,
-        a_eln=dict(component='FileEditQuantity'),
-        a_browser=dict(adaptor='RawFileAdaptor'),
+        a_eln=dict(component="FileEditQuantity"),
+        a_browser=dict(adaptor="RawFileAdaptor"),
     )
 
     instrument = SubSection(section_def=Instrument)
@@ -182,10 +182,10 @@ class HallInstrumentReference(SectionReference):
 
     reference = Quantity(
         type=HallInstrument,
-        description='A reference to a NOMAD `HallInstrument` entry.',
+        description="A reference to a NOMAD `HallInstrument` entry.",
         a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity',
-            label='Hall Instrument Reference',
+            component="ReferenceEditQuantity",
+            label="Hall Instrument Reference",
         ),
     )
 
@@ -196,22 +196,22 @@ class ContactsGraftingStep(ProcessStep):
     m_def = Section(a_eln=None)
     step_type = Quantity(
         type=MEnum(
-            ['Pre-process', 'Process', 'Post-process', 'Measurement', 'Storage']
+            ["Pre-process", "Process", "Post-process", "Measurement", "Storage"]
         ),
-        a_eln={'component': 'EnumEditQuantity'},
+        a_eln={"component": "EnumEditQuantity"},
     )
 
     step_number = Quantity(
         type=int,
-        description='sequential number of the step on going',
-        a_eln={'component': 'NumberEditQuantity'},
+        description="sequential number of the step on going",
+        a_eln={"component": "NumberEditQuantity"},
     )
 
     elapsed_time = Quantity(
         type=np.float64,
-        description='Duration of the current step',
-        unit='minute',
-        a_eln={'component': 'NumberEditQuantity', 'defaultDisplayUnit': 'minute'},
+        description="Duration of the current step",
+        unit="minute",
+        a_eln={"component": "NumberEditQuantity", "defaultDisplayUnit": "minute"},
     )
 
 
@@ -223,49 +223,49 @@ class ContactsGrafting(Process, EntryData):
     )
     method = Quantity(
         type=str,
-        default='Contacts Grafting (IKZ)',
+        default="Contacts Grafting (IKZ)",
     )
     dose = Quantity(
-        type=np.float64, description='dose', a_eln={'component': 'NumberEditQuantity'}
+        type=np.float64, description="dose", a_eln={"component": "NumberEditQuantity"}
     )
 
     net_mass_before = Quantity(
         type=np.float64,
-        description='net mass before the process step',
-        unit='gram',
-        a_eln={'component': 'NumberEditQuantity', 'defaultDisplayUnit': 'gram'},
+        description="net mass before the process step",
+        unit="gram",
+        a_eln={"component": "NumberEditQuantity", "defaultDisplayUnit": "gram"},
     )
 
     crucible_model = Quantity(
         type=str,
-        description='The name of the chemical that is typically used in literature',
-        a_eln={'component': 'StringEditQuantity'},
+        description="The name of the chemical that is typically used in literature",
+        a_eln={"component": "StringEditQuantity"},
     )
 
     crucible_mass = Quantity(
         type=np.float64,
-        description='crucible mass',
-        unit='gram',
-        a_eln={'component': 'NumberEditQuantity', 'defaultDisplayUnit': 'gram'},
+        description="crucible mass",
+        unit="gram",
+        a_eln={"component": "NumberEditQuantity", "defaultDisplayUnit": "gram"},
     )
 
     brutto_mass_before = Quantity(
         type=np.float64,
-        description='brutto mass before the process step',
-        unit='gram',
-        a_eln={'component': 'NumberEditQuantity', 'defaultDisplayUnit': 'gram'},
+        description="brutto mass before the process step",
+        unit="gram",
+        a_eln={"component": "NumberEditQuantity", "defaultDisplayUnit": "gram"},
     )
 
     atmosphere = Quantity(
         type=str,
-        description='which atmosphere is choosen for th experiment',
-        a_eln={'component': 'StringEditQuantity'},
+        description="which atmosphere is choosen for th experiment",
+        a_eln={"component": "StringEditQuantity"},
     )
 
     oven = Quantity(
         type=str,
-        description='oven used in the experiment',
-        a_eln={'component': 'StringEditQuantity'},
+        description="oven used in the experiment",
+        a_eln={"component": "StringEditQuantity"},
     )
 
     steps = SubSection(section_def=ContactsGraftingStep, repeats=True)
@@ -278,10 +278,10 @@ class ContactsGraftingReference(SectionReference):
 
     reference = Quantity(
         type=ContactsGrafting,
-        description='A reference to a NOMAD `ContactsGrafting` entry.',
+        description="A reference to a NOMAD `ContactsGrafting` entry.",
         a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity',
-            label='Contacts Grafting Reference',
+            component="ReferenceEditQuantity",
+            label="Contacts Grafting Reference",
         ),
     )
 
@@ -301,10 +301,10 @@ class ContactsRemovingReference(SectionReference):
 
     reference = Quantity(
         type=ContactsRemoving,
-        description='A reference to a NOMAD `ContactsRemoving` entry.',
+        description="A reference to a NOMAD `ContactsRemoving` entry.",
         a_eln=ELNAnnotation(
-            component='ReferenceEditQuantity',
-            label='Contacts Removing Reference',
+            component="ReferenceEditQuantity",
+            label="Contacts Removing Reference",
         ),
     )
 
@@ -317,14 +317,14 @@ class MeasurementGeometry(ArchiveSection):
     geometry = Quantity(
         type=MEnum(
             [
-                'Van_der_Pauw_square',
-                'Van_der_Pauw_rectangular',
-                'Van_der_Pauw_arbitrary',
-                'Hall_bar_1221',
-                'Hall_bar_1311',
+                "Van_der_Pauw_square",
+                "Van_der_Pauw_rectangular",
+                "Van_der_Pauw_arbitrary",
+                "Hall_bar_1221",
+                "Hall_bar_1311",
             ]
         ),
-        a_eln={'component': 'EnumEditQuantity'},
+        a_eln={"component": "EnumEditQuantity"},
     )
 
 
@@ -335,9 +335,9 @@ class MetalStack(PureSubstance):
     m_def = Section()
     thickness = Quantity(
         type=np.float64,
-        description='FILL THE DESCRIPTION',
-        unit='micrometer',
-        a_eln={'component': 'NumberEditQuantity', 'defaultDisplayUnit': 'micrometer'},
+        description="FILL THE DESCRIPTION",
+        unit="micrometer",
+        a_eln={"component": "NumberEditQuantity", "defaultDisplayUnit": "micrometer"},
     )
 
 
@@ -357,14 +357,14 @@ class ExperimentLakeshoreHall(Experiment, EntryData):
     m_def = Section(
         # a_eln={"hide": ["steps"]},
         categories=[IKZHallCategory],
-        label='Lakeshore Hall Experiment',
+        label="Lakeshore Hall Experiment",
     )
     description = Quantity(
         type=str,
-        description='description',
+        description="description",
         a_eln=ELNAnnotation(
-            component='StringEditQuantity',
-            label='Notes',
+            component="StringEditQuantity",
+            label="Notes",
         ),
     )
     instrument = SubSection(
@@ -389,7 +389,7 @@ class ExperimentLakeshoreHall(Experiment, EntryData):
             try:
                 step_list.extend(handle_section(section))
             except (AttributeError, TypeError, NameError) as e:
-                print(f'An error occurred: {e}')
+                print(f"An error occurred: {e}")
         self.steps = [step for step in step_list if step is not None]
 
         activity_lists = (
@@ -401,7 +401,7 @@ class ExperimentLakeshoreHall(Experiment, EntryData):
                     try:
                         step_list.extend(handle_section(activity))
                     except (AttributeError, TypeError, NameError) as e:
-                        print(f'An error occurred: {e}')
+                        print(f"An error occurred: {e}")
         self.steps = [step for step in step_list if step is not None]
 
         archive.workflow2 = None
