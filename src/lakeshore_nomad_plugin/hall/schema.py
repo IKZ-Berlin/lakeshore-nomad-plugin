@@ -49,7 +49,7 @@ from nomad.datamodel.metainfo.basesections import (
     Experiment,
 )
 
-from nomad_measurements.general.schema import (
+from nomad_measurements.general import (
     ActivityReference,
 )
 
